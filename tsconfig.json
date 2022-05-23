@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "outDir": "dist",
+    "target": "ES5",
+    "lib": ["es5", "es2017", "dom"],
+    "esModuleInterop": true,
+    "typeRoots": ["node_modules/@types"],
+    "rootDir": "./src",
+    "skipLibCheck": true,
+    "module": "commonjs",
+    "moduleResolution": "Node",
+    "declaration": true,
+    "sourceMap": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "src/**/*.test.ts"]
+}

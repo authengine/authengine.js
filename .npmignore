@@ -1,0 +1,9 @@
+# npm ignored files
+
+# don't include source files
+src/
+
+# don't include tool config files
+.prettierrc
+tsconfig.json
+jest.config.js
