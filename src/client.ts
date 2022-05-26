@@ -144,6 +144,10 @@ export default class Client {
     }
   }
 
+  get project() {
+    return this.config.apiRequest({ method: "GET", url: "/public/project" });
+  }
+
   get magicLink() {
     return new MagicLinkClient(this.config);
   }
