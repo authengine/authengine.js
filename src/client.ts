@@ -130,10 +130,14 @@ export default class Client {
       });
     };
 
+    axios.interceptors.request.use((config) => {
+      config.headers["x-user-session-token"] = localStorage.getItem(
+        SESSION_TOKEN_LOCAL_STORAGE_KEY
+      );
+    });
+
     axios.defaults.headers.common["x-public-key"] = config.publicKey;
     axios.defaults.baseURL = config.apiUrl;
-    axios.defaults.headers.common["x-user-session-token"] =
-      localStorage.getItem(SESSION_TOKEN_LOCAL_STORAGE_KEY);
     axios.defaults.headers.common["Content-Type"] = "application/json";
     if (!config.apiRequest) {
       config.apiRequest = defaultFetcher;
