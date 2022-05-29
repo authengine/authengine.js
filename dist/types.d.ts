@@ -13,6 +13,7 @@ export interface ValidateMagicLinkAttemptData {
     noNewSession?: boolean;
 }
 export interface ValidateMagicLinkAttemptResponse {
+    id: string;
     token: string;
 }
 export interface Session {

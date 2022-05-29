@@ -1,6 +1,9 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 
-import { SESSION_TOKEN_LOCAL_STORAGE_KEY } from "./consts";
+import {
+  SESSION_TOKEN_LOCAL_STORAGE_KEY,
+  SESSION_ID_LOCAL_STORAGE_KEY,
+} from "./consts";
 import {
   CreateMagicLinkData,
   CreateMagicLinkResponse,
@@ -8,29 +11,32 @@ import {
   ValidateMagicLinkAttemptResponse,
   RevokeSessionData,
   UserData,
-  ResponseError,
+  AuthengineResponseError,
 } from "./types";
 
 export class MagicLinkClient {
-  private config: ClientConfig;
-  constructor(config: ClientConfig) {
+  private config: AuthengineClientConfig;
+  constructor(config: AuthengineClientConfig) {
     this.config = config;
   }
 
   public send(data: CreateMagicLinkData) {
-    return this.config.apiRequest<CreateMagicLinkData>({
-      method: "POST",
-      url: "/public/auth/magic-link",
-      data,
-    });
+    return this.config.apiRequest<CreateMagicLinkData, CreateMagicLinkResponse>(
+      {
+        method: "post",
+        url: "/public/auth/magic-link",
+        data,
+      }
+    );
   }
 
-  public loginWithToken(
-    data: ValidateMagicLinkAttemptData
-  ): Promise<ValidateMagicLinkAttemptResponse> {
+  public loginWithToken(data: ValidateMagicLinkAttemptData) {
     return this.config
-      .apiRequest<ValidateMagicLinkAttemptData>({
-        method: "POST",
+      .apiRequest<
+        ValidateMagicLinkAttemptData,
+        ValidateMagicLinkAttemptResponse
+      >({
+        method: "post",
         url: `/public/auth/magic-link/${data.id}/validate-attempt`,
         data: {
           token: data.token,
@@ -41,6 +47,7 @@ export class MagicLinkClient {
           SESSION_TOKEN_LOCAL_STORAGE_KEY,
           response.token
         );
+        global.localStorage.setItem(SESSION_ID_LOCAL_STORAGE_KEY, response.id);
         axios.defaults.headers.common["x-user-session-token"] = response.token;
         return response;
       });
@@ -48,8 +55,8 @@ export class MagicLinkClient {
 }
 
 export class UserClient {
-  private config: ClientConfig;
-  constructor(config: ClientConfig) {
+  private config: AuthengineClientConfig;
+  constructor(config: AuthengineClientConfig) {
     this.config = config;
   }
 
@@ -62,7 +69,7 @@ export class UserClient {
   }
 
   public get() {
-    return this.config.apiRequest({ method: "GET", url: "/user/me" });
+    return this.config.apiRequest({ method: "get", url: "/user/me" });
   }
 
   public data() {
@@ -71,13 +78,13 @@ export class UserClient {
 
   public logout() {
     global.localStorage.removeItem(SESSION_TOKEN_LOCAL_STORAGE_KEY);
-    return this.config.apiRequest({ method: "POST", url: "/user/logout" });
+    return this.config.apiRequest({ method: "post", url: "/user/logout" });
   }
 }
 
 export class SessionClient {
-  private config: ClientConfig;
-  constructor(config: ClientConfig) {
+  private config: AuthengineClientConfig;
+  constructor(config: AuthengineClientConfig) {
     this.config = config;
   }
 
@@ -86,7 +93,7 @@ export class SessionClient {
   }
 
   public list() {
-    return this.config.apiRequest({ method: "GET", url: "/user/sessions" });
+    return this.config.apiRequest({ method: "get", url: "/user/sessions" });
   }
 
   public revoke(data: RevokeSessionData) {
@@ -97,22 +104,28 @@ export class SessionClient {
   }
 }
 
-export interface ClientConfig {
-  apiUrl: string;
-  publicKey: string;
-  apiRequest?: <T>(config: AxiosRequestConfig) => Promise<T>;
+interface AuthengineRequestConfig<T> {
+  method: "get" | "post" | "delete" | "put";
+  url: string;
+  data?: any;
 }
 
-export default class Client {
-  config: ClientConfig;
+export type AuthengineClientConfig = {
+  apiUrl: string;
+  publicKey: string;
+  apiRequest?: <T, K>(config: AuthengineRequestConfig<T>) => Promise<K>;
+};
 
-  constructor(config: ClientConfig) {
+export default class Client {
+  config: AuthengineClientConfig;
+
+  constructor(config: AuthengineClientConfig) {
     this.config = config;
 
     if (!config.apiUrl) throw new Error("apiUrl is required");
     if (!config.publicKey) throw new Error("publicKey is required");
 
-    const defaultFetcher: ClientConfig["apiRequest"] = async (
+    const defaultFetcher: AuthengineClientConfig["apiRequest"] = async (
       config: AxiosRequestConfig
     ) => {
       return new Promise((resolve, reject) => {
@@ -136,23 +149,23 @@ export default class Client {
       );
     });
 
-    axios.defaults.headers.common["x-public-key"] = config.publicKey;
     axios.defaults.baseURL = config.apiUrl;
+    axios.defaults.headers.common["x-public-key"] = config.publicKey;
     axios.defaults.headers.common["Content-Type"] = "application/json";
     if (!config.apiRequest) {
       config.apiRequest = defaultFetcher;
     }
   }
 
-  get project() {
-    return this.config.apiRequest({ method: "GET", url: "/public/project" });
+  public getProject() {
+    return this.config.apiRequest({ method: "get", url: "/public/project" });
   }
 
-  get magicLink() {
+  public get magicLink() {
     return new MagicLinkClient(this.config);
   }
 
-  get user() {
+  public get user() {
     return new UserClient(this.config);
   }
 }

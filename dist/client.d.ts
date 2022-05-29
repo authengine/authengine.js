@@ -30,6 +30,7 @@ export interface ClientConfig {
 export default class Client {
     config: ClientConfig;
     constructor(config: ClientConfig);
+    get getProject(): Promise<unknown>;
     get magicLink(): MagicLinkClient;
     get user(): UserClient;
 }

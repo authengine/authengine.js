@@ -41,12 +41,23 @@ const client = new Client({
 test("magic link fails for invalid email", async () => {
   const email = "invalid";
   client.magicLink
-    .create({ email, callbackUrl: "http://localhost:3000/validate" })
+    .send({ email, callbackUrl: "http://localhost:3000/validate" })
+    .then((response) => {
+      throw new Error("This magic link should have never been successful");
+    })
     .catch((error) => {
       expect(error.message).toBeDefined();
     });
 });
 
-test("retrives all sessions", async () => {
-  client.user.sessions.list();
+test("magic link sends successfully", async () => {
+  const email = "test@authengine.co";
+  client.magicLink
+    .send({ email, callbackUrl: "http://localhost:3000/validate" })
+    .then((response) => {
+      expect(response).toBeDefined();
+    })
+    .catch((error) => {
+      throw new Error("Magic link did not send successfully");
+    });
 });

@@ -64,6 +64,7 @@ var MagicLinkClient = /** @class */ (function () {
         })
             .then(function (response) {
             global.localStorage.setItem(consts_1.SESSION_TOKEN_LOCAL_STORAGE_KEY, response.token);
+            global.localStorage.setItem(consts_1.SESSION_ID_LOCAL_STORAGE_KEY, response.id);
             axios_1.default.defaults.headers.common["x-user-session-token"] = response.token;
             return response;
         });
@@ -150,15 +151,23 @@ var Client = /** @class */ (function () {
                     })];
             });
         }); };
+        axios_1.default.interceptors.request.use(function (config) {
+            config.headers["x-user-session-token"] = localStorage.getItem(consts_1.SESSION_TOKEN_LOCAL_STORAGE_KEY);
+        });
         axios_1.default.defaults.headers.common["x-public-key"] = config.publicKey;
         axios_1.default.defaults.baseURL = config.apiUrl;
-        axios_1.default.defaults.headers.common["x-user-session-token"] =
-            localStorage.getItem(consts_1.SESSION_TOKEN_LOCAL_STORAGE_KEY);
         axios_1.default.defaults.headers.common["Content-Type"] = "application/json";
         if (!config.apiRequest) {
             config.apiRequest = defaultFetcher;
         }
     }
+    Object.defineProperty(Client.prototype, "getProject", {
+        get: function () {
+            return this.config.apiRequest({ method: "GET", url: "/public/project" });
+        },
+        enumerable: false,
+        configurable: true
+    });
     Object.defineProperty(Client.prototype, "magicLink", {
         get: function () {
             return new MagicLinkClient(this.config);

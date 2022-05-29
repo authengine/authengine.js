@@ -8,7 +8,7 @@ export interface CreateMagicLinkData {
 
 export interface CreateMagicLinkResponse {
   id: string;
-  token: string;
+  expiresAt: string;
 }
 
 export interface ValidateMagicLinkAttemptData {
@@ -18,6 +18,7 @@ export interface ValidateMagicLinkAttemptData {
 }
 
 export interface ValidateMagicLinkAttemptResponse {
+  id: string;
   token: string;
 }
 
@@ -53,7 +54,7 @@ export interface UserData {
   createdAt: string;
 }
 
-export interface ResponseError {
+export interface AuthengineResponseError {
   type: string;
   error: string;
   message: string;
